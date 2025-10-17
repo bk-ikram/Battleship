@@ -1,0 +1,1 @@
+//This module handles interaction with the DOM. 
