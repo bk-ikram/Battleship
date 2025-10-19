@@ -23,12 +23,14 @@ class Ship{
 
 class Gameboard{
     constructor(){
-        this.grid = this.initialize();
+        this.formationGrid = this.initialize(undefined);
+        this.hitGrid = this.initialize('0');
+        this.ships = [];
     }
-    initialize(){
+    initialize(fillValue){
         let grid = new Array();
         for(let i = 0; i<10 ; i++)
-           grid.push(new Array(10));
+           grid.push((new Array(10)).fill(fillValue));
         return grid
     }
     placeShip(size,startPoint,direction){
@@ -53,20 +55,21 @@ class Gameboard{
                 = direction === 'right' 
                     ? [startY, i]
                     : [i, startX];
-            if(! (this.grid[p[0]][p[1]] === undefined)){
+            if(! (this.formationGrid[p[0]][p[1]] === undefined)){
                 throw new Error("Another ship already exists there");
             }
             else
                 positions.push(p);
         }
         const ship = new Ship(size);
+        this.ships.push(ship);
         //console.log(positions);
-        positions.forEach((ele) => this.grid[ele[0]][ele[1]] = ship);
+        positions.forEach((ele) => this.formationGrid[ele[0]][ele[1]] = ship);
         return true;
 
     }
-    get gridVisual(){
-        const visual = structuredClone(this.grid);
+    get formationGridVisual(){
+        const visual = structuredClone(this.formationGrid);
         for(let y = 0; y < visual.length ; y++){
             const horizontal = visual[y];
             for (let x = 0; x < horizontal.length ; x++)
@@ -75,6 +78,47 @@ class Gameboard{
         return visual;
     }
 
+    receiveAttack(point){
+        //Hits are stored on the hit grid.
+        const X = point[1];
+        const Y = point[0];
+        //If the area has already received an attack, return false
+        if(! (this.hitGrid[Y][X] === '0'))
+            return false
+        //Register the hit
+        this.hitGrid[Y][X] = 'X';
+        //Check if ship is in hit area
+        const ship = this.formationGrid[Y][X];
+        //If a ship is in the area, it receives a hit
+        if(!(ship === undefined))
+            ship.hit();
+    }
+
+    get hitGridVisual(){
+        //The hit grid visual can contain one of the following values:
+        // 0 => no strike yet
+        // M => Miss
+        // S => ship struck, but not sunk
+        // X => ship has been sunk
+        const visual = structuredClone(this.hitGrid);
+        for(let y = 0; y < visual.length ; y++){
+            const horizontal = visual[y];
+            for (let x = 0; x < horizontal.length ; x++){
+                const ship = this.formationGrid[y][x];
+                if(visual[y][x] === '0')
+                    continue;
+                if(ship === undefined)
+                    visual[y][x] = 'M';
+                else
+                    visual[y][x] = ship.isSunk() ? 'X' : 'S';
+            }
+        }
+        return visual;
+    }
+
+    allShipsSunk(){
+        return this.ships.every((ship) => ship.isSunk())
+    }
 }
 
 function areDeeplyEqual(arr1, arr2){
