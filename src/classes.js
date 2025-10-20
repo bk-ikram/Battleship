@@ -121,6 +121,13 @@ class Gameboard{
     }
 }
 
+class Player{
+    constructor(type){
+        this.type = type;
+        this.gameboard = new Gameboard();
+    }
+}
+
 function areDeeplyEqual(arr1, arr2){
     //check if both parameters are arrays
     if (!(Array.isArray(arr1)) || !(Array.isArray(arr2)))
