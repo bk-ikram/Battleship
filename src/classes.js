@@ -14,6 +14,7 @@ class Ship{
     }
     hit(){
         ++this.hits;
+        return true;
     }
     isSunk(){
         this.isShipSunk = this.hits >= this.length ? true : false;
@@ -79,19 +80,27 @@ class Gameboard{
     }
 
     receiveAttack(point){
+        //initialize hit report
+        let hitReport = {
+            landedHit: false
+            ,successfulHit: false
+        };
         //Hits are stored on the hit grid.
         const X = point[1];
         const Y = point[0];
         //If the area has already received an attack, return false
         if(! (this.hitGrid[Y][X] === '0'))
-            return false
+            return hitReport;
+        hitReport.landedHit = true;
         //Register the hit
         this.hitGrid[Y][X] = 'X';
         //Check if ship is in hit area
         const ship = this.formationGrid[Y][X];
         //If a ship is in the area, it receives a hit
         if(!(ship === undefined))
-            ship.hit();
+            hitReport.successfulHit = ship.hit();
+        return hitReport;
+            
     }
 
     get hitGridVisual(){
@@ -126,6 +135,50 @@ class Player{
         this.type = type;
         this.gameboard = new Gameboard();
     }
+}
+
+class Game{
+    constructor(){
+        this.humanPlayer = new Player('Human')
+        this.computerPlayer = new Player('Computer')
+        this.currentPlayer = this.humanPlayer
+        this.gameOver = false
+    }
+    playTurn(point){
+        let hitReport = undefined;
+        if(this.currentPlayer === this.humanPlayer){
+            hitReport = this.computerPlayer.gameboard.receiveAttack(point);
+        }
+        else
+            hitReport = this.computerTurn();
+
+        //check if the game is over
+        if(this.humanPlayer.gameboard.allShipsSunk() || this.computerPlayer.gameboard.allShipsSunk()){
+            this.gameOver = true;
+            return;
+        }
+        //if the hit was not successful, it is the other player's turn.
+        if(!hitReport.successfulHit)
+            this.currentPlayer = this.currentPlayer === this.computerPlayer ?  this.humanPlayer : this.computerPlayer;
+    }
+
+    computerTurn(){
+        //implement computer playing logic. Should return true/false
+        //attempt to hit human player's board. If chosen point is in a previously hit 
+        //area, attempt again.
+        let landedHit = false;
+        let hitReport = undefined;
+        while (! landedHit){
+            hitReport = this.humanPlayer.gameboard.receiveAttack([getRandomCoordinate(),getRandomCoordinate()]);
+            landedHit = hitReport.landedHit;
+        }
+        return hitReport;
+    }
+
+}
+
+function getRandomCoordinate(){
+    return maxSatisfying.floor(Math.random() * 10);
 }
 
 function areDeeplyEqual(arr1, arr2){

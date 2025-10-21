@@ -1,0 +1,99 @@
+*{
+    margin: 0;
+    box-sizing: border-box;
+}
+/*
+#title{
+    border-bottom: solid #B84877 3px;
+}
+    */
+body{
+    height: 100vh;
+    display: grid;
+    grid-template-areas: 'left-margin-top title right-margin-top'
+                'left-margin-body main right-margin-body';
+    grid-template-columns: 1fr 8fr 1fr;
+    grid-template-rows: 1fr 7fr;
+    font-family: 'Comic Sans MS';
+}
+/*font-family: "Brush Script MT", "Lucida Handwriting", cursive; ,"Tahoma"*/
+#title-area{
+    grid-area: title;
+    font-size: x-large;
+    display:flex;
+    align-items: end;
+    padding-left: 5px;
+}
+#main{
+    grid-area: main;
+    padding: 1.5rem 3rem;
+    background-color: bisque;
+    display:grid;
+    grid-template-areas: 'announcement announcement'
+                            'player-grid enemy-grid';
+    grid-template-rows: 3rem calc(10*3rem);
+    column-gap: 3rem;
+}
+#left-margin-body{
+    grid-area: left-margin-body;
+}
+#title-area,#main{
+    border-left: double rgb(184, 72, 119) 0.6rem;
+    border-right: double rgba(184, 72, 119, 0.07) 0.6rem;
+}
+#right-margin-body{
+    grid-area: right-margin-body;
+}
+#left-margin-body,#main,#right-margin-body{
+    background: repeating-linear-gradient(
+        to bottom,
+        #779DA9,
+        #779DA9 0.13rem,
+        white 0.13rem,
+        white 3rem
+    );
+    background-size: 100% 100%;
+}
+#announcement{
+    display:flex;
+    justify-content: center;
+    grid-area: announcement;
+    font-size: larger ;
+}
+
+#player-grid{
+    grid-area: player-grid;
+}
+#enemy-grid{
+    grid-area: enemy-grid;
+}
+#player-grid,#enemy-grid{
+    border: solid #858C92  0.26rem;
+    aspect-ratio: 1;
+    margin-top: 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(10,1fr);
+    grid-template-rows: repeat(10,1fr);
+}
+/*
+#paper{
+    height: 80vh;
+    background: repeating-linear-gradient(
+        to bottom,
+        #779DA9,
+        #779DA9 2px,
+        white 2px,
+        white 40px
+    );
+    background-position-y: -50px;
+    background-size: 100% 100%;
+}
+body{
+    background:green;
+}
+    */
+/*
+line{
+    border:  
+}
+    */
