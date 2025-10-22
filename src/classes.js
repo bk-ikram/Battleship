@@ -146,7 +146,7 @@ class Game{
     }
     playTurn(point){
         let hitReport = undefined;
-        if(this.currentPlayer === this.humanPlayer){
+        if(this.isPlayerTurn()){
             hitReport = this.computerPlayer.gameboard.receiveAttack(point);
         }
         else
@@ -159,7 +159,7 @@ class Game{
         }
         //if the hit was not successful, it is the other player's turn.
         if(!hitReport.successfulHit)
-            this.currentPlayer = this.currentPlayer === this.computerPlayer ?  this.humanPlayer : this.computerPlayer;
+            this.currentPlayer = !this.isPlayerTurn() ?  this.humanPlayer : this.computerPlayer;
     }
 
     computerTurn(){
@@ -174,9 +174,66 @@ class Game{
         }
         return hitReport;
     }
-
+    
+    isPlayerTurn(){
+        return this.currentPlayer === this.humanPlayer;
+    }
 }
 
+class ScreenController{
+    constructor(){
+        this.playerGridDiv = document.querySelector("#player-grid")
+        this.enemyGridDiv = document.querySelector("#enemy-grid")
+        this.init()
+        this.game = new Game()
+        this.playerBoard = this.game.humanPlayer.gameboard
+        this.enemyBoard = this.game.computerPlayer.gameboard
+    }
+
+    init(){
+        //initialize the grids
+        [this.playerGridDiv,this.enemyGridDiv]
+            .forEach((grid)=>this.initEmptyGrid(grid));
+        //add event listeners
+        this.initEventListener(this.enemyGridDiv);
+    }
+    initEmptyGrid(grid){
+        for(let y = 0; y < 10 ; y++ ){
+            for(let x = 0; x < 10 ; x++ ){
+                const cell = document.createElement('div');
+                cell.dataset.y = y;
+                cell.dataset.x = x;
+                cell.style.background = 'white';
+                grid.appendChild(cell);
+            }
+        }
+    }
+    initEventListener(grid){
+        grid.addEventListener((e) => {
+            const [y,x] = [e.target.dataset.y,e.target.dataset.x]
+        })
+        this.game.playTurn([y,x]);
+        [this.playerBoard,this.enemyBoard]
+            .forEach((grid) => this.render(grid));
+    }
+
+    render(grid){
+        for(let y = 0; y < 10 ; y++ ){
+            for(let x = 0; x < 10 ; x++ ){
+                const status = grid[y][x];
+                if(status === '0')
+                    continue;
+                const gridDiv =""
+                const div = "";
+            }
+        }
+        return
+    }
+
+
+
+
+}
 function getRandomCoordinate(){
     return maxSatisfying.floor(Math.random() * 10);
 }
@@ -200,4 +257,4 @@ function areDeeplyEqual(arr1, arr2){
     return true;
 }
 
-export {Ship, Gameboard, areDeeplyEqual};
+export {Ship, Gameboard,ScreenController, areDeeplyEqual};
