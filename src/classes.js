@@ -198,6 +198,8 @@ class ScreenController{
         this.initEventListener(this.enemyGridDiv);
     }
     initEmptyGrid(grid){
+        //first, clear make sure the grid is empty
+        grid.innerHTML = '';
         for(let y = 0; y < 10 ; y++ ){
             for(let x = 0; x < 10 ; x++ ){
                 const cell = document.createElement('div');
@@ -213,17 +215,19 @@ class ScreenController{
             const [y,x] = [e.target.dataset.y,e.target.dataset.x]
         })
         this.game.playTurn([y,x]);
-        [this.playerBoard,this.enemyBoard]
-            .forEach((grid) => this.render(grid));
+        this.renderPlayerGrid();
+        this.renderEnemyGrid();
     }
 
-    render(grid){
+    renderPlayerGrid(){
+        const hitGrid = this.playerBoard.hitGrid;
+        const formationGrid = this.playerBoard.formationGrid;
         for(let y = 0; y < 10 ; y++ ){
             for(let x = 0; x < 10 ; x++ ){
                 const status = grid[y][x];
                 if(status === '0')
                     continue;
-                const gridDiv =""
+                const gridDiv = ""  
                 const div = "";
             }
         }
