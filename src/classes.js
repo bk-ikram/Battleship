@@ -57,7 +57,7 @@ class Gameboard{
                     ? [startY, i]
                     : [i, startX];
             if(! (this.formationGrid[p[0]][p[1]] === undefined)){
-                throw new Error("Another ship already exists there");
+                return false;
             }
             else
                 positions.push(p);
@@ -144,6 +144,7 @@ class Game{
         this.currentPlayer = this.humanPlayer
         this.gameOver = false
     }
+
     playTurn(point){
         let hitReport = undefined;
         if(this.isPlayerTurn()){
@@ -182,19 +183,25 @@ class Game{
 
 class ScreenController{
     constructor(){
-        this.playerGridDiv = document.querySelector("#player-grid")
-        this.enemyGridDiv = document.querySelector("#enemy-grid")
-        this.init()
-        this.game = new Game()
-        this.playerBoard = this.game.humanPlayer.gameboard
-        this.enemyBoard = this.game.computerPlayer.gameboard
+        this.playerGridDiv = document.querySelector("#player-grid");
+        this.enemyGridDiv = document.querySelector("#enemy-grid");
+        this.game = new Game();
+        this.playerBoard = this.game.humanPlayer.gameboard;
+        this.enemyBoard = this.game.computerPlayer.gameboard;
+        this.init();
+
     }
 
     init(){
         //initialize the grids
         [this.playerGridDiv,this.enemyGridDiv]
             .forEach((grid)=>this.initEmptyGrid(grid));
-        //add event listeners
+        //randomly place ships for each player
+        [this.playerBoard,this.enemyBoard]
+            .forEach((board)=>this.randomlyPlaceShips(board));
+        //render the grids to show player's ships
+        this.renderGrids();
+        //add event listeners for enemy grid only
         this.initEventListener(this.enemyGridDiv);
     }
     initEmptyGrid(grid){
@@ -210,36 +217,79 @@ class ScreenController{
             }
         }
     }
-    initEventListener(grid){
-        grid.addEventListener((e) => {
-            const [y,x] = [e.target.dataset.y,e.target.dataset.x]
+
+    randomlyPlaceShips(board){
+        const ships = [5,4,3,3,2];
+        const orientations = ['right', 'down'];
+        ships.forEach((ship,i) => {
+            let isSuccessful = false;
+            while(!isSuccessful){
+                const rand = Math.floor(Math.random() * 1);
+                const x = getRandomCoordinate();
+                const y = getRandomCoordinate();
+                isSuccessful = board.placeShip(ship,[y,x],orientations[rand]);
+            }
         })
-        this.game.playTurn([y,x]);
-        this.renderPlayerGrid();
-        this.renderEnemyGrid();
+
+    }
+    initEventListener(grid){
+        grid.addEventListener('click', (e) => {
+            console.log('click detected');
+            const [y,x] = [e.target.dataset.y,e.target.dataset.x];
+            this.game.playTurn([y,x]);
+            this.renderGrids();
+        })
+        
     }
 
-    renderPlayerGrid(){
-        const hitGrid = this.playerBoard.hitGrid;
-        const formationGrid = this.playerBoard.formationGrid;
+    renderGrids(){
+        //render player grid
+        this.renderGrid(this.playerGridDiv,this.playerBoard.hitGridVisual,this.playerBoard.formationGrid);
+        //render enemy grid
+        this.renderGrid(this.enemyGridDiv,this.enemyBoard.hitGridVisual);
+    }
+
+    renderGrid(gridDiv,hitGrid,formationGrid){
         for(let y = 0; y < 10 ; y++ ){
             for(let x = 0; x < 10 ; x++ ){
-                const status = grid[y][x];
-                if(status === '0')
-                    continue;
-                const gridDiv = ""  
-                const div = "";
+                let color;
+                //If formationGrid is passed, then show the ship in graphite
+                // , otherwise, do not colour.
+                if(formationGrid)
+                    color = formationGrid[y][x] ? '#858C92' : undefined;
+                //Next, get the hit status
+                //The hit grid visual can contain one of the following values:
+                // 0 => no strike yet
+                // M => Miss
+                // S => ship struck, but not sunk
+                // X => ship has been sunk
+                const status = hitGrid[y][x];
+                switch(status){
+                    case 'M':
+                        color = '#99c140'; //green
+                        break;
+                    case 'S':
+                        color = '#db7b2b'; //orange
+                        break;
+                    case 'X':
+                        color = '#cc3232'; //red
+                        break;
+                }
+                if(color){
+                    const gridSubDiv = gridDiv.querySelector(`[data-y="${y}"][data-x="${x}"]`);
+                    gridSubDiv.style.backgroundColor = color;
+                }
+
             }
         }
-        return
+        return;
     }
-
 
 
 
 }
 function getRandomCoordinate(){
-    return maxSatisfying.floor(Math.random() * 10);
+    return Math.floor(Math.random() * 10);
 }
 
 function areDeeplyEqual(arr1, arr2){
