@@ -144,14 +144,10 @@ class Game{
         this.currentPlayer = this.humanPlayer
         this.gameOver = false
     }
-
     playTurn(point){
         let hitReport = undefined;
-        if(this.isPlayerTurn()){
-            hitReport = this.computerPlayer.gameboard.receiveAttack(point);
-        }
-        else
-            hitReport = this.computerTurn();
+        //computer receives attack
+        hitReport = this.computerPlayer.gameboard.receiveAttack(point);
 
         //check if the game is over
         if(this.humanPlayer.gameboard.allShipsSunk() || this.computerPlayer.gameboard.allShipsSunk()){
@@ -160,7 +156,7 @@ class Game{
         }
         //if the hit was not successful, it is the other player's turn.
         if(!hitReport.successfulHit)
-            this.currentPlayer = !this.isPlayerTurn() ?  this.humanPlayer : this.computerPlayer;
+            this.computerTurn();
     }
 
     computerTurn(){
@@ -173,7 +169,10 @@ class Game{
             hitReport = this.humanPlayer.gameboard.receiveAttack([getRandomCoordinate(),getRandomCoordinate()]);
             landedHit = hitReport.landedHit;
         }
-        return hitReport;
+        setTimeout(() => {
+            return hitReport;
+        }, 2500);
+        
     }
     
     isPlayerTurn(){
@@ -224,7 +223,7 @@ class ScreenController{
         ships.forEach((ship,i) => {
             let isSuccessful = false;
             while(!isSuccessful){
-                const rand = Math.floor(Math.random() * 1);
+                const rand = Math.floor(Math.random() * 2);
                 const x = getRandomCoordinate();
                 const y = getRandomCoordinate();
                 isSuccessful = board.placeShip(ship,[y,x],orientations[rand]);
@@ -233,14 +232,18 @@ class ScreenController{
 
     }
     initEventListener(grid){
-        grid.addEventListener('click', (e) => {
+        grid.addEventListener('click', this.handleGridClick.bind(this))
+        
+    }
+
+    handleGridClick(e){
             console.log('click detected');
             const [y,x] = [e.target.dataset.y,e.target.dataset.x];
             this.game.playTurn([y,x]);
             this.renderGrids();
-        })
-        
-    }
+            if(this.game.gameOver)
+                this.enemyGridDiv.removeEventListener('click',this.handleGridClick)
+        }
 
     renderGrids(){
         //render player grid
