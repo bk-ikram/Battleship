@@ -237,6 +237,9 @@ class ScreenController{
     }
 
     handleGridClick(e){
+            //if click was done outside one of the squares, return
+            if(!e.target.hasAttribute('data-x'))
+                return;
             console.log('click detected');
             const [y,x] = [e.target.dataset.y,e.target.dataset.x];
             this.game.playTurn([y,x]);

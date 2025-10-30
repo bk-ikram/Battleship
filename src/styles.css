@@ -2,11 +2,10 @@
     margin: 0;
     box-sizing: border-box;
 }
-/*
-#title{
-    border-bottom: solid #B84877 3px;
+h2{
+    text-align: center;
 }
-    */
+
 body{
     height: 100vh;
     display: grid;
@@ -29,8 +28,9 @@ body{
     padding: 0.5rem 3rem;
     display:grid;
     grid-template-areas: 'announcement announcement'
-                            'player-grid enemy-grid';
-    grid-template-rows: 2rem calc(10*3rem);
+                            'player-side enemy-side';
+    grid-template-rows: 1fr 15fr;
+    grid-template-columns: 1fr 1fr;
     column-gap: 3rem;
 }
 #left-margin-body{
@@ -44,16 +44,6 @@ body{
     grid-area: right-margin-body;
 }
 #left-margin-body,#main,#right-margin-body{
-    /*
-    background: repeating-linear-gradient(
-        to bottom,
-        #779DA9,
-        #779DA9 0.13rem,
-        white 0.13rem,
-        white 3rem
-    );
-    background-size: 100% 100%;
-    */
     border-top: solid #779DA9 0.20rem;
 }
 #announcement{
@@ -63,41 +53,20 @@ body{
     font-size: larger ;
 }
 
-#player-grid{
-    grid-area: player-grid;
+#player-side{
+    grid-area: player-side;
 }
-#enemy-grid{
-    grid-area: enemy-grid;
+#enemy-side{
+    grid-area: enemy-side;
 }
+
 #player-grid,#enemy-grid{
     border: solid #858C92  0.26rem;
     aspect-ratio: 1;
-    margin-top: 1.5rem;
+    margin-top: 1rem;
     display: grid;
     grid-template-columns: repeat(10,1fr);
     grid-template-rows: repeat(10,1fr);
     gap: 0.13rem;
     background-color: #858C92;
 }
-/*
-#paper{
-    height: 80vh;
-    background: repeating-linear-gradient(
-        to bottom,
-        #779DA9,
-        #779DA9 2px,
-        white 2px,
-        white 40px
-    );
-    background-position-y: -50px;
-    background-size: 100% 100%;
-}
-body{
-    background:green;
-}
-    */
-/*
-line{
-    border:  
-}
-    */
