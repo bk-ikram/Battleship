@@ -138,11 +138,12 @@ class Player{
 }
 
 class Game{
-    constructor(){
+    constructor(onTurnComplete){
         this.humanPlayer = new Player('Human')
         this.computerPlayer = new Player('Computer')
         this.currentPlayer = this.humanPlayer
         this.gameOver = false
+        this.onTurnComplete = onTurnComplete //optional callback
     }
     playTurn(point){
         let hitReport = undefined;
@@ -152,11 +153,18 @@ class Game{
         //check if the game is over
         if(this.humanPlayer.gameboard.allShipsSunk() || this.computerPlayer.gameboard.allShipsSunk()){
             this.gameOver = true;
+            this.onTurnComplete?.();//trigger UI update
             return;
         }
         //if the hit was not successful, it is the other player's turn.
-        if(!hitReport.successfulHit)
-            this.computerTurn();
+        if(!hitReport.successfulHit){
+            delay(() => {
+                this.computerTurn()
+            },1);
+        } 
+        else
+            this.onTurnComplete?.();
+
     }
 
     computerTurn(){
@@ -169,9 +177,15 @@ class Game{
             hitReport = this.humanPlayer.gameboard.receiveAttack([getRandomCoordinate(),getRandomCoordinate()]);
             landedHit = hitReport.landedHit;
         }
-        setTimeout(() => {
-            return hitReport;
-        }, 2500);
+        this.onTurnComplete?.();
+        //if computer lands a successful hit, it plays another round
+
+        if(hitReport.successfulHit){
+            delay(() => {
+                this.computerTurn()
+            },1);
+        }
+        return hitReport;
         
     }
     
@@ -184,7 +198,7 @@ class ScreenController{
     constructor(){
         this.playerGridDiv = document.querySelector("#player-grid");
         this.enemyGridDiv = document.querySelector("#enemy-grid");
-        this.game = new Game();
+        this.game = new Game(() => this.renderGrids());
         this.playerBoard = this.game.humanPlayer.gameboard;
         this.enemyBoard = this.game.computerPlayer.gameboard;
         this.init();
@@ -317,4 +331,9 @@ function areDeeplyEqual(arr1, arr2){
     return true;
 }
 
+function delay(callback,seconds){
+    setTimeout(() => {
+        callback();
+    },seconds * 1000);
+}
 export {Ship, Gameboard,ScreenController, areDeeplyEqual};
