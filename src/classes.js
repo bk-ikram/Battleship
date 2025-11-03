@@ -176,15 +176,19 @@ class Game{
         let landedHit = false;
         let hitReport = undefined;
 
-        //get list of points adjacent to any "struck" but not sunk
+        //get random point from list of points adjacent to any "struck" but not sunk
         // points on the player's board
-
-
-        while (! landedHit){
+        const point = this.getPossiblePlayerShipLocation();
+        if(point)
+            hitReport = this.humanPlayer.gameboard.receiveAttack(point);
+        //otherwise, try a random point
+        else{
+            while (!landedHit){
             hitReport = this.humanPlayer.gameboard.receiveAttack([getRandomCoordinate(),getRandomCoordinate()]);
             landedHit = hitReport.landedHit;
         }
-
+        };
+        
         //check if the game is over
         this.checkGameEnd();
 
@@ -208,31 +212,41 @@ class Game{
             for(let x = 0; x < 10 ; x++ ){
                 const point = grid[y][x];
                 if(point === 'S'){
-                    const adj = [
+                    let adj = [
                         [y-1,x]
                         ,[y+1,x]
                         ,[y,x-1]
                         ,[y,x+1]
                     ];
+                    console.log("prefiltered adj");
+                    console.log(adj);
                     adj = adj.filter(([a_y,a_x])=>{
                         //check if point outside grid
                         if(a_y < 0 || a_y > 9 || a_x < 0 || a_x > 9)
                             return false;
                         //check if point already attempted
-                        if(grid[y][x] !== '0')
+                        if(grid[a_y][a_x] !== '0')
                             return false;
                         else
                             return true;
                     })
+
+                    console.log("filtered adj");
+                    console.log(adj);
                     discoveredLocations = discoveredLocations.concat(adj);
                 }
             }
         }
         const len = discoveredLocations.length;
+        console.log("discovered locations:");
+        console.log(discoveredLocations);
+        if(len === 0)
+            return undefined;
         //return a random eligible point
         const i = Math.floor(Math.random() * len);
         return discoveredLocations[i];
     }
+
     switchCurrentPlayer(){
         //check if the game is over
         this.checkGameEnd();
