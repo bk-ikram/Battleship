@@ -34,6 +34,10 @@ class Gameboard{
            grid.push((new Array(10)).fill(fillValue));
         return grid
     }
+    clear(){
+        this.formationGrid = this.initialize(undefined);
+        this.ships = [];
+    }
     placeShip(size,startPoint,direction){
         //IMPORTANT: points are denoted by [y,x];
         //Check that the direction passed is valid
@@ -64,7 +68,6 @@ class Gameboard{
         }
         const ship = new Ship(size);
         this.ships.push(ship);
-        //console.log(positions);
         positions.forEach((ele) => this.formationGrid[ele[0]][ele[1]] = ship);
         return true;
 
@@ -218,8 +221,6 @@ class Game{
                         ,[y,x-1]
                         ,[y,x+1]
                     ];
-                    console.log("prefiltered adj");
-                    console.log(adj);
                     adj = adj.filter(([a_y,a_x])=>{
                         //check if point outside grid
                         if(a_y < 0 || a_y > 9 || a_x < 0 || a_x > 9)
@@ -231,15 +232,11 @@ class Game{
                             return true;
                     })
 
-                    console.log("filtered adj");
-                    console.log(adj);
                     discoveredLocations = discoveredLocations.concat(adj);
                 }
             }
         }
         const len = discoveredLocations.length;
-        console.log("discovered locations:");
-        console.log(discoveredLocations);
         if(len === 0)
             return undefined;
         //return a random eligible point
@@ -275,22 +272,67 @@ class ScreenController{
                             ,() => this.renderAnnouncement());
         this.playerBoard = this.game.humanPlayer.gameboard;
         this.enemyBoard = this.game.computerPlayer.gameboard;
+        this.dialog = document.querySelector("dialog")
+        this.selectionGridDiv = document.querySelector("#selection-grid");
+        this.randomBtn = document.querySelector("#random");
+        this.submitBtn = document.querySelector("#submit");
         this.init();
 
     }
 
     init(){
+        //initialize the selection dialog window
+        this.initSelectionDialog();
+
         //initialize the grids
         [this.playerGridDiv,this.enemyGridDiv]
             .forEach((grid)=>this.initEmptyGrid(grid));
-        //randomly place ships for each player
-        [this.playerBoard,this.enemyBoard]
-            .forEach((board)=>this.randomlyPlaceShips(board));
-        //render the grids to show player's ships
-        this.renderGrids();
+        //randomly place ships for the computer
+       this.randomlyPlaceShips(this.enemyBoard);
+
+        //render the computer's grid
+        this.renderGrid(this.enemyGridDiv,this.enemyBoard.hitGridVisual);
+
         //add event listeners for enemy grid only
         this.initEventListener(this.enemyGridDiv);
     }
+    initSelectionDialog(){
+        //show dialog on open
+        this.dialog.showModal();
+
+        //initialize the empty selection grid
+        this.initEmptyGrid(this.selectionGridDiv);
+
+        //initial placement
+        this.changeSelection();
+
+        //add event listeners to buttons
+        this.randomBtn.addEventListener("click", (e)=> this.changeSelection());
+        this.submitBtn.addEventListener("click", (e) => this.confirmSelection(e));
+    }
+
+    changeSelection(){
+        //clear player's board
+        this.playerBoard.clear();
+        //empty the grid
+        this.initEmptyGrid(this.selectionGridDiv);
+        
+        //create initial placement
+        this.randomlyPlaceShips(this.playerBoard);
+
+        //render the selection grid
+        this.renderGrid(this.selectionGridDiv,undefined,this.playerBoard.formationGrid);
+    }
+
+    confirmSelection(e){
+        e.preventDefault();
+
+        //render the player's grid
+        this.renderGrid(this.playerGridDiv,this.playerBoard.hitGridVisual,this.playerBoard.formationGrid);
+        //close the dialog
+        this.dialog.close();
+    }
+
     initEmptyGrid(grid){
         //first, clear make sure the grid is empty
         grid.innerHTML = '';
@@ -333,7 +375,6 @@ class ScreenController{
                 return;
             if(this.game.gameOver)
                 return;
-            console.log('click detected');
             const [y,x] = [e.target.dataset.y,e.target.dataset.x];
             this.game.playTurn([y,x]);
             this.renderGrids();
@@ -372,24 +413,27 @@ class ScreenController{
                 // , otherwise, do not colour.
                 if(formationGrid)
                     color = formationGrid[y][x] ? '#858C92' : undefined;
-                //Next, get the hit status
-                //The hit grid visual can contain one of the following values:
-                // 0 => no strike yet
-                // M => Miss
-                // S => ship struck, but not sunk
-                // X => ship has been sunk
-                const status = hitGrid[y][x];
-                switch(status){
-                    case 'M':
-                        color = '#99c140'; //green
-                        break;
-                    case 'S':
-                        color = '#db7b2b'; //orange
-                        break;
-                    case 'X':
-                        color = '#cc3232'; //red
-                        break;
+                if(hitGrid){
+                    //Next, get the hit status
+                    //The hit grid visual can contain one of the following values:
+                    // 0 => no strike yet
+                    // M => Miss
+                    // S => ship struck, but not sunk
+                    // X => ship has been sunk
+                    const status = hitGrid[y][x];
+                    switch(status){
+                        case 'M':
+                            color = '#99c140'; //green
+                            break;
+                        case 'S':
+                            color = '#db7b2b'; //orange
+                            break;
+                        case 'X':
+                            color = '#cc3232'; //red
+                            break;
+                    }
                 }
+                
                 if(color){
                     const gridSubDiv = gridDiv.querySelector(`[data-y="${y}"][data-x="${x}"]`);
                     gridSubDiv.style.backgroundColor = color;

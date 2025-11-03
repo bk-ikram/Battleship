@@ -60,7 +60,7 @@ body{
     grid-area: enemy-side;
 }
 
-#player-grid,#enemy-grid{
+#player-grid,#enemy-grid,#selection-grid{
     border: solid #858C92  0.26rem;
     aspect-ratio: 1;
     margin-top: 1rem;
@@ -69,4 +69,36 @@ body{
     grid-template-rows: repeat(10,1fr);
     gap: 0.13rem;
     background-color: #858C92;
+}
+dialog[open]{
+    margin: auto;
+    align-self: center;
+    height: 100vh;
+    padding: 10px 30px;
+    display: grid;
+    gap: 10px;
+    /*grid-template-rows: 2fr 10fr 1fr;*/
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas: 'title'
+                        'grid'
+                        'controls';
+}
+
+dialog::backdrop{
+    background-color: rgba(0,0,0,0.5);
+    backdrop-filter: blur(5px);
+}
+
+#controls{
+    display: flex;
+    justify-content: space-evenly;
+}
+button{
+    width: 100px;
+    height: 30px;
+    border-radius: 5px;
+    border: none;
+    background-color: #858C92;
+    color: white;
+    font-weight: 700;
 }
