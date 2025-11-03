@@ -138,12 +138,13 @@ class Player{
 }
 
 class Game{
-    constructor(onTurnComplete){
+    constructor(onTurnComplete,onPlayerSwitch){
         this.humanPlayer = new Player('Human')
         this.computerPlayer = new Player('Computer')
         this.currentPlayer = this.humanPlayer
         this.gameOver = false
         this.onTurnComplete = onTurnComplete //optional callback
+        this.onPlayerSwitch = onPlayerSwitch //optional callback
     }
     playTurn(point){
         let hitReport = undefined;
@@ -151,13 +152,12 @@ class Game{
         hitReport = this.computerPlayer.gameboard.receiveAttack(point);
 
         //check if the game is over
-        if(this.humanPlayer.gameboard.allShipsSunk() || this.computerPlayer.gameboard.allShipsSunk()){
-            this.gameOver = true;
-            this.onTurnComplete?.();//trigger UI update
-            return;
-        }
+        this.checkGameEnd();
+
         //if the hit was not successful, it is the other player's turn.
         if(!hitReport.successfulHit){
+            //switch current player
+            this.switchCurrentPlayer();
             delay(() => {
                 this.computerTurn()
             },1);
@@ -168,15 +168,26 @@ class Game{
     }
 
     computerTurn(){
+        if(this.gameOver)
+            return;
         //implement computer playing logic. Should return true/false
         //attempt to hit human player's board. If chosen point is in a previously hit 
         //area, attempt again.
         let landedHit = false;
         let hitReport = undefined;
+
+        //get list of points adjacent to any "struck" but not sunk
+        // points on the player's board
+
+
         while (! landedHit){
             hitReport = this.humanPlayer.gameboard.receiveAttack([getRandomCoordinate(),getRandomCoordinate()]);
             landedHit = hitReport.landedHit;
         }
+
+        //check if the game is over
+        this.checkGameEnd();
+
         this.onTurnComplete?.();
         //if computer lands a successful hit, it plays another round
 
@@ -184,11 +195,59 @@ class Game{
             delay(() => {
                 this.computerTurn()
             },1);
+            return;
         }
+        this.switchCurrentPlayer();
         return hitReport;
         
     }
-    
+    getPossiblePlayerShipLocation(){
+        const grid = this.humanPlayer.gameboard.hitGridVisual
+        let discoveredLocations = [];
+        for(let y = 0; y < 10 ; y++ ){
+            for(let x = 0; x < 10 ; x++ ){
+                const point = grid[y][x];
+                if(point === 'S'){
+                    const adj = [
+                        [y-1,x]
+                        ,[y+1,x]
+                        ,[y,x-1]
+                        ,[y,x+1]
+                    ];
+                    adj = adj.filter(([a_y,a_x])=>{
+                        //check if point outside grid
+                        if(a_y < 0 || a_y > 9 || a_x < 0 || a_x > 9)
+                            return false;
+                        //check if point already attempted
+                        if(grid[y][x] !== '0')
+                            return false;
+                        else
+                            return true;
+                    })
+                    discoveredLocations = discoveredLocations.concat(adj);
+                }
+            }
+        }
+        const len = discoveredLocations.length;
+        //return a random eligible point
+        const i = Math.floor(Math.random() * len);
+        return discoveredLocations[i];
+    }
+    switchCurrentPlayer(){
+        //check if the game is over
+        this.checkGameEnd();
+        this.currentPlayer = this.isPlayerTurn() ?
+                            this.computerPlayer :
+                            this.humanPlayer;
+        this.onPlayerSwitch?.();
+    }
+    checkGameEnd(){
+        //check if the game is over
+        if(this.humanPlayer.gameboard.allShipsSunk() || this.computerPlayer.gameboard.allShipsSunk()){
+            this.gameOver = true;
+            this.onPlayerSwitch?.();//trigger UI update
+        }
+    }
     isPlayerTurn(){
         return this.currentPlayer === this.humanPlayer;
     }
@@ -198,7 +257,8 @@ class ScreenController{
     constructor(){
         this.playerGridDiv = document.querySelector("#player-grid");
         this.enemyGridDiv = document.querySelector("#enemy-grid");
-        this.game = new Game(() => this.renderGrids());
+        this.game = new Game(() => this.renderGrids()
+                            ,() => this.renderAnnouncement());
         this.playerBoard = this.game.humanPlayer.gameboard;
         this.enemyBoard = this.game.computerPlayer.gameboard;
         this.init();
@@ -254,15 +314,36 @@ class ScreenController{
             //if click was done outside one of the squares, return
             if(!e.target.hasAttribute('data-x'))
                 return;
+            //Check if it is the player's turn
+            if(!this.game.isPlayerTurn())
+                return;
+            if(this.game.gameOver)
+                return;
             console.log('click detected');
             const [y,x] = [e.target.dataset.y,e.target.dataset.x];
             this.game.playTurn([y,x]);
             this.renderGrids();
-            if(this.game.gameOver)
-                this.enemyGridDiv.removeEventListener('click',this.handleGridClick)
         }
 
+    renderAnnouncement(){
+        let ann = ""
+        const announcementBox = document.querySelector("p");
+        if(this.game.gameOver){
+            if(this.game.computerPlayer.gameboard.allShipsSunk())
+                ann = "You win the Battle!";
+            
+            else
+                ann = "You have lost the Battle =("
+        }
+        else if(this.game.isPlayerTurn())
+            ann = "Your turn";
+        else
+            ann = "Your enemy is about to strike";
+        announcementBox.innerText = ann;
+    }
     renderGrids(){
+        //render the announcement
+        this.renderAnnouncement();
         //render player grid
         this.renderGrid(this.playerGridDiv,this.playerBoard.hitGridVisual,this.playerBoard.formationGrid);
         //render enemy grid
